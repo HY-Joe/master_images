@@ -401,7 +401,7 @@ function zoomed() {
   }
 
   var image = svg.append('image')
-    .attr('xlink:href', "https://hy-joe.github.io/master_images/public/sample_image/"+img_file_name)
+    .attr('xlink:href', "https://raw.githubusercontent.com/KwonNH/hearing-masterpiece-mobile/master/public/milano_image/"+img_file_name)
     .attr("x", 1)
     .attr("y", y_start)
     .attr('width', img_width*opt)
