@@ -10,19 +10,6 @@ var log_array = [];
 var log_count = 0;
 
 var desc_mode = 0;
-var current = 0;
-
-function toggleFullscreen() {
-			let elem = document.getElementById("image"); //this should be the painting area
-
-			if (!document.fullscreenElement) {
-			elem.requestFullscreen().catch(err => {
-			console.log(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-			});
-			} else {
-			document.exitFullscreen();
-			}
-}
 
 function change_desc_mode(){
     if(desc_mode == 0){ //default
@@ -66,32 +53,79 @@ function draw_polygon(mode){
 
     svg.selectAll("polygon").remove();
 
-    img_file = image_data_m;
+    if(mode == "m" || mode == "label"){ //fine(polygon mode)
+        img_file = image_data_m;
 
-    not_parts_object = []
+        not_parts_object = []
 
-    for(var i=0;i<image_data_m.annotation.object.length;i++){
-        if(image_data_m.annotation.object[i]['parts']['ispartof'] == null){
+        for(var i=0;i<image_data_m.annotation.object.length;i++){
+            if(image_data_m.annotation.object[i]['parts']['ispartof'] == null){
 
-            not_parts_object.push(image_data_m.annotation.object[i]);
+                not_parts_object.push(image_data_m.annotation.object[i]);
+            }
+
         }
 
+        d3.selectAll("polygon").remove();
+        svg.selectAll("polygon")
+        .data(not_parts_object)
+        .enter().append("polygon")
+        .attr("id", function(d){
+            return d['id'];
+        })
+        .attr("points", function(d) {
+            if(d['deleted'] == "0"){
+
+                return d.polygon.pt.map(function(d) {
+                        //console.log(d);
+                        return [x(String(parseInt(d['x'])*opt)),y(String(parseInt(d['y'])*opt))].join(","); }).join(" "); }});
+        ;
     }
 
-    d3.selectAll("polygon").remove();
-    svg.selectAll("polygon")
-    .data(not_parts_object)
-    .enter().append("polygon")
-    .attr("id", function(d){
-        return d['id'];
-    })
-    .attr("points", function(d) {
-        if(d['deleted'] == "0"){
+    else if(mode == "m" && lan == "k"){ //fine(polygon mode)
+        img_file = image_data_k;
+        d3.selectAll("polygon").remove();
+        svg.selectAll("polygon")
+        .data(img_file.annotation.object)
+        .enter().append("polygon")
+        .attr("points", function(d) {
+            if(d['deleted'] == "0"){
 
-            return d.polygon.pt.map(function(d) {
-                    //console.log(d);
-                    return [x(String(parseInt(d['x'])*opt)),y(String(parseInt(d['y'])*opt))].join(","); }).join(" "); }});
-    ;
+                return d.polygon.pt.map(function(d) {
+                        //console.log(d);
+                        return [x(String(parseInt(d['x'])*opt)),y(String(parseInt(d['y'])*opt))].join(","); }).join(" "); }})
+        ;
+    }
+
+    else if(mode == "p" && lan == "e"){ //rough(bbox mode)
+        img_file = image_data_p_e;
+        d3.selectAll("polygon").remove();
+        svg.selectAll("polygon")
+        .data(img_file.annotation.object)
+        .enter().append("polygon")
+        .attr("points", function(d) {
+            if(d['deleted'] != "1"){
+
+                return d.polygon.pt.map(function(d) {
+                        //console.log(d);
+                        return [x(String(parseInt(d['x'])*opt)),y(String(parseInt(d['y'])*opt))].join(","); }).join(" "); }})
+        ;
+    }
+
+    else if(mode == "p" && lan == "k"){ //rough(bbox mode)
+        img_file = image_data_p;
+        d3.selectAll("polygon").remove();
+        svg.selectAll("polygon")
+        .data(img_file.annotation.object)
+        .enter().append("polygon")
+        .attr("points", function(d) {
+            if(d['deleted'] != "1"){
+
+                return d.polygon.pt.map(function(d) {
+                        //console.log(d);
+                        return [x(String(parseInt(d['x'])*opt)),y(String(parseInt(d['y'])*opt))].join(","); }).join(" "); }})
+        ;
+    }
 
     //polygon opacity, fill color(random)
   svg.selectAll("polygon")
@@ -101,34 +135,67 @@ function draw_polygon(mode){
   //.style("stroke",function() {
   //  return "hsl(" + Math.random() * 360 + ",100%,50%)";
   //})
+
   .attr("category", function(d){
     d.name = d.name.replace('.', '');
     return d.name;})
     .on("touchstart", function(){
         responsiveVoice.cancel();
     })
-
-    .on("click", function(d){
+    .dblTap(function(d) {
         if(mode == "label" && d.parts.hasparts != null){
-
             mode = "parts";
             draw_parts(d.parts.hasparts);
-            responsiveVoice.cancel();
-            setTimeout(function(){responsiveVoice.cancel();}, 2000);
         }
+    })
+    .on("click", function(d){
+        responsiveVoice.cancel();
+        setTimeout(function(){responsiveVoice.speak(d.attributes, language);}, 2000);
     })
     .append("svg:title")
     .text(function(d) {
         d.name = d.name.replace('.', '');
-
-        if(d.attributes == null){
-            return d.name
+        if(mode == "p"){ //part mode
+            return d.name + ".." + d.attributes;
         }
-        else{
-            return d.name + ".. .. .." + d.attributes;
+        else if(mode == "m"){ //mturk mode(object mode)
+            var cat = d.name + "..";
+            if(d.remains != "" && typeof d.remains != "undefined" && attr_exp == "1"){
+                cat = cat + d.remains;
+            }
+            if(d.color != "" && typeof d.color != "undefined" && attr_color == "1"){
+                if(lan == "e"){
+                    cat = cat + ", the color is "+d.color;
+                }
+                else if(lan == "k"){
+                     cat = cat + ", 색깔은 "+d.color;
+                }
+
+            }
+            if(d.location !="" && typeof d.location != "undefined" && attr_loc == "1"){
+                if(lan == "e"){
+                    cat = cat + ", the location is " + d.location;
+                }
+                else if(lan == "k"){
+                    cat = cat + ", 위치는 " + d.location;
+                }
+            }
+            if(d.size !="" && typeof d.size != "undefined" && attr_size == "1"){
+                if(lan == "e"){
+                    cat = cat + ", the size is " + d.size;
+                }
+                else if(lan == "k"){
+                    cat = cat + ", 크기는 " + d.size;
+                }
+            }
+            return cat;
         }
-
-
+        else if(mode == "label"){ //only label of the polygon
+            return d.name;
+        }
+        else if(mode == "attr"){ //only attributes of the polygon
+            return d.attributes;
+        }
      })
     ;
 }
@@ -183,8 +250,14 @@ function draw_parts(parts_list){
     .on("touchstart", function(){
         responsiveVoice.cancel();
     })
-    .on("click", function(d){
+    .dblTap(function(d) {
+
         draw_polygon("label");
+
+    })
+    .on("click", function(d){
+        responsiveVoice.cancel();
+        setTimeout(function(){responsiveVoice.speak(d.attributes, language);}, 2000);
     })
     .append("svg:title")
     .text(function(d) {
@@ -225,7 +298,7 @@ function draw_parts(parts_list){
             return cat;
         }
         else if(mode == "label" || mode == "parts"){
-            return d.name +" .. .. .. "+ d.attributes;
+            return d.name;
         }
         else if(mode == "attr"){
             return d.attributes;
@@ -258,7 +331,7 @@ var svg = d3.select(".image").append("svg")
   .attr("preserveAspectRatio", "xMinYMin meet")
   .append("g")
   .dblTap(function() {
-    if(mode == "parts"){
+  if(mode == "parts"){
             mode = "label";
             draw_polygon(mode);
         }
@@ -289,9 +362,9 @@ var svg = d3.select(".image").append("svg")
  if(lan == "k")
     var img_file = image_data_k;
  else
-    var img_file = image_data_m
+    var image_file = image_data_m
 
-  var img_file_name = img_id+".jpg";
+  var img_file_name = img_file['annotation']['filename'];
 
   //var objects_list = get_objects_list(img_file.annotations);
 
@@ -342,4 +415,3 @@ function zoomed() {
   y.domain([0, img_height*portion*opt]);
 
   draw_polygon(mode);
-
