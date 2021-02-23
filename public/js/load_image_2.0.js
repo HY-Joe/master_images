@@ -43,7 +43,7 @@ $.ajax({
 var img_width;
 var img_height;
 
-var img_id_list = ["1", "2", "4", "5", "9", "11", "17", "18", "grande", "2_milano"];
+var img_id_list = ["1", "2", "4", "5", "9", "11", "17", "18", "grande"];//, "2_milano"];
 var img_size_list = [[800, 1192], [11141, 8822], [9665, 11367], [1250, 556], [4272,6000], [2880, 3579], [800, 1095], [750, 773], [15596, 10382], [1200, 941]];
 
 
@@ -74,9 +74,9 @@ else if(img_id == "18"){
 else if(img_id == "grande"){
     var opt = 0.07;
 }
-else if(img_id = "2_milano"){
-    var opt = 1;
-}
+// else if(img_id = "2_milano"){
+//     var opt = 1;
+// }
 
 
 for(var i=0;i<img_id_list.length;i++){
