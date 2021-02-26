@@ -305,7 +305,7 @@ function draw_parts(parts_list){
   svg.selectAll("polygon")
   //.style("fill-opacity", .000001)
   //.style("stroke-width", 5)
-  .style("fill-opacity", .0)
+  .style("fill-opacity", .1)
   //.style("stroke",function() {
   //  return "hsl(" + Math.random() * 360 + ",100%,50%)";
   //})
