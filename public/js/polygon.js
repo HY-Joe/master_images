@@ -504,6 +504,7 @@ function zoomed() {
     .attr("y", y_start)
     .attr('width', img_width*opt)
     .attr('height', img_height*opt)
+    .attr('role', "image")
     ;
 
   var x = d3.scaleLinear().range([0, img_width*opt]);
