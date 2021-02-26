@@ -309,6 +309,7 @@ function draw_parts(parts_list){
   //.style("stroke",function() {
   //  return "hsl(" + Math.random() * 360 + ",100%,50%)";
   //})
+  .attr("role", "image")
 
   .attr("category", function(d){
     d.name = d.name.replace('.', '');
@@ -504,7 +505,6 @@ function zoomed() {
     .attr("y", y_start)
     .attr('width', img_width*opt)
     .attr('height', img_height*opt)
-    .attr('role', "image")
     ;
 
   var x = d3.scaleLinear().range([0, img_width*opt]);
